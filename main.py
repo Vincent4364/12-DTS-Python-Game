@@ -5,6 +5,29 @@ import sys
 
 random.seed(os.urandom(1024))
 
+
+def setup_player():
+    player = {
+        'name': introduction(),
+        'hp': 0,
+        'stamina': 0,
+        'level': 1,
+        'location': None,
+        'class': None,  # This will be set by the player_class function
+        'Attacks knight': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
+                           {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}],
+        'Attacks samurai': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
+                            {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}],
+        'Attacks mage': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
+                         {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}],
+        'Attacks bandit': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
+                           {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}],
+    }
+    player = player_class(player)  # Now, we're properly passing the player dictionary
+    return player
+
+
+
 def wait_for_input():
     controls_read = input()
     while controls_read == "":
@@ -12,111 +35,57 @@ def wait_for_input():
     return controls_read
 
 
-def game_mechanics():
-    player = {  # Player will have a name and class given by the user, player class will affect base damage and health
-        # Health will be increased through player leveling system and damage will be increased through damage on players
-        # weapon (builds upon base damage)
-        'name': '',
-        'class': '',
-        'hp': 0,
-        'stamina': 0,
-        'level': 1,
-        'location': None,
-        'Attacks_knight': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
-                           {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}
-                           ],
-        'Attacks_samurai': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
-                            {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}
-                            ],
-        'Attacks_mage': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
-                         {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}
-                         ],
-        'Attacks_bandit': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
-                           {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}
-                           ]
+enemy = [
+    {
+        'basic enemy': [
+            {'name': 'Corrupted Code Fragment'},
+            {'hp': 50},
+            {"damage": 2},
+        ],
+        'advanced enemy': [
+            {'name': 'Unsolvable Bug'},
+            {'hp': 50},
+            {"damage": 2},
+        ]
+    }]
 
+items = [
+    {
+        'Weapon tier1': [
+            {'Type': 'Sword', 'Name': 'SharpArray', 'Damage': 20},  # Starting weapon for Knight class
+            {'Type': 'Katana', 'Name': 'CyberSlicer', 'Damage': 15},  # Starting weapon for Samurai class
+            {'Type': 'Staff', 'Name': 'CodeCaster', 'Damage': 18},  # Starting weapon for Mage class
+            {'Type': 'Dagger', 'Name': 'AsyncEdge', 'Damage': 12},  # Starting weapon for Bandit class
+        ],
+        'Weapon tier2': [
+            {'Type': 'Sword', 'Name': 'RecurseRipper', 'Damage': 500},
+            {'Type': 'Katana', 'Name': 'SliceIndexer', 'Health_Given': 30, 'Amount': 1},
+            {'Type': 'Staff', 'Name': 'GambitGenerator', 'Health_Given': 50, 'Amount': 1},
+            {'Type': 'Dagger', 'Name': 'FatalFloat', 'Health_Given': 70}
+        ],
+        'Weapon tier3': [
+            {'Type': 'Sword', 'Name': 'DefBlade', 'Amount': 500},
+            # Combining the Python function definition keyword def with "Blade", suggesting a sword that can define or alter reality itself, following the rules of its wielder, much like a function follows its defined parameters and actions.
+            {'Type': 'Katana', 'Name': 'CyberShinobi', 'Health_Given': 30, 'Amount': 1},
+            {'Type': 'Staff', 'Name': 'YieldScepter', 'Health_Given': 50, 'Amount': 1},
+            {'Type': 'Dagger', 'Name': 'ByteBlade', 'Health_Given': 70}
+        ]
     }
+]
 
-    enemy = [
-        {
-            'basic enemy': [
-                {'name': 'Corrupted Code Fragment'},
-                {'hp': 50},
-                {"damage": 2},
-            ],
-            'advanced enemy': [
-                {'name': 'Unsolvable Bug'},
-                {'hp': 50},
-                {"damage": 2},
-            ]
-        }]
 
-    items = [
-        {
-            'Weapon tier1': [
-                {'Type': 'Sword', 'Name': 'SharpArray', 'Damage': 20},  # Starting weapon for Knight class
-                {'Type': 'Katana', 'Name': 'CyberSlicer', 'Damage': 15},  # Starting weapon for Samurai class
-                {'Type': 'Staff', 'Name': 'CodeCaster', 'Damage': 18},  # Starting weapon for Mage class
-                {'Type': 'Dagger', 'Name': 'AsyncEdge', 'Damage': 12},  # Starting weapon for Bandit class
-            ],
-            'Weapon tier2': [
-                {'Type': 'Sword', 'Name': 'RecurseRipper', 'Damage': 500},
-                {'Type': 'Katana', 'Name': 'SliceIndexer', 'Health_Given': 30, 'Amount': 1},
-                {'Type': 'Staff', 'Name': 'GambitGenerator', 'Health_Given': 50, 'Amount': 1},
-                {'Type': 'Dagger', 'Name': 'FatalFloat', 'Health_Given': 70}
-            ],
-            'Weapon tier3': [
-                {'Type': 'Sword', 'Name': 'DefBlade', 'Amount': 500},
-                # Combining the Python function definition keyword def with "Blade", suggesting a sword that can define or alter reality itself, following the rules of its wielder, much like a function follows its defined parameters and actions.
-                {'Type': 'Katana', 'Name': 'CyberShinobi', 'Health_Given': 30, 'Amount': 1},
-                {'Type': 'Staff', 'Name': 'YieldScepter', 'Health_Given': 50, 'Amount': 1},
-                {'Type': 'Dagger', 'Name': 'ByteBlade', 'Health_Given': 70}
-            ]
-        }
-    ]
+#random_encounter = random.randint(0, 2)
+#wild_enemy = enemy[random_encounter]
+#enemy_attack_randomizer = random.randint(0, len(wild_enemy['Attack']) - 1)
 
-    player, enemy, items = battle(player, enemy, items)
+inventory = []
+locations = ["Cursed Library", "Fields of NullPointer", "Castle of SegFault"]
 
-    random_encounter = random.randint(0, 2)
-    wild_enemy = enemy[random_encounter]
-    enemy_attack_randomizer = random.randint(0, len(wild_enemy['Attack']) - 1)
 
-    inventory = []
-    locations = ["Cursed Library", "Fields of NullPointer", "Castle of SegFault"]
-
-    if player['level'] == 1:
-        player['Attacks'][0]['MinDamage'] = 17
-        player['Attacks'][0]['MaxDamage'] = 22
-        player['Attacks'][1]['MinDamage'] = 10
-        player['Attacks'][1]['MaxDamage'] = 12
-    elif player['level'] == 2:
-        player['Attacks'][0]['MinDamage'] = 19
-        player['Attacks'][0]['MaxDamage'] = 24
-        player['Attacks'][1]['MinDamage'] = 12
-        player['Attacks'][1]['MaxDamage'] = 14
-    elif player['level'] == 3:
-        player['Attacks'][0]['MinDamage'] = 21
-        player['Attacks'][0]['MaxDamage'] = 26
-        player['Attacks'][1]['MinDamage'] = 14
-        player['Attacks'][1]['MaxDamage'] = 16
-    elif player['level'] == 4:
-        player['Attacks'][0]['MinDamage'] = 23
-        player['Attacks'][0]['MaxDamage'] = 28
-        player['Attacks'][1]['MinDamage'] = 16
-        player['Attacks'][1]['MaxDamage'] = 18
-    elif player['level'] == 5:
-        player['Attacks'][0]['MinDamage'] = 25
-        player['Attacks'][0]['MaxDamage'] = 30
-        player['Attacks'][1]['MinDamage'] = 18
-        player['Attacks'][1]['MaxDamage'] = 20
-
-    starting_location = random.choice(locations)
-    all_locations(starting_location)
-
-def introdfuction(player):
+def introduction():
+    name = input("Enter the name of your hero: ")
     print("")
-    player['name'] = input("First, what is your name? ")
-    print('Welcome {}, to Dark Pythons: Echoes of the Fallen Code.', player['name'])
+    print(f'Welcome {name}, to Dark Pythons: Echoes of the Fallen Code.')
     print('Controls: W,A,S,D to move directions, type in your preferred action when provided.')
     print("After every line of dialogue, the video game will wait for the enter key's input to continue:")
     print("Remember, this is a story game, so make sure you do everything you can for the full experience!")
@@ -131,7 +100,17 @@ def introdfuction(player):
     print('================================================================')
 
 
-def player_class(player, items, inventory, locations):
+def print_player_info(player):
+    print(f"\nPlayer Information:")
+    print(f"Name: {player['name']}")
+    print(f"Class: {player['class']}")
+    print(f"HP: {player['hp']}")
+    print(f"Stamina: {player['stamina']}")
+    print(f"Level: {player['level']}")
+    # Add more details as needed.
+
+
+def player_class(player):
     while True:
         print("Welcome, fragmented one. You have been chosen by the order in hopes you have what it takes to find and "
               "reset the core of creation!")
@@ -141,32 +120,28 @@ def player_class(player, items, inventory, locations):
         if player['class'] == 'knight':
             player['damage'] = 20
             player['hp'] = 100
+            player["Attack knight"].append({'Name': 'Slash', 'MinDamage': 5, 'MaxDamage': 10})
             inventory.append(items[0]['Weapon tier1'][0])
-            all_locations(locations)
-            print('A new knight has stepped foot into the world of Pythorean!')
             break
         elif player['class'] == 'samurai':
             player['damage'] = 10
             player['hp'] = 100
+            player["Attack samurai"].append({'Name': 'bleed', 'MinDamage': 5, 'MaxDamage': 10})
             inventory.append(items[0]['Weapon tier1'][1])
-            all_locations(locations)
-            print('A new samurai has stepped foot into the world of Pythorean!')
             break
         elif player['class'] == 'mage':
             player['damage'] = 10
             player['hp'] = 100
+            player["Attack mage"].append({'Name': 'rock sling', 'MinDamage': 5, 'MaxDamage': 10})
             inventory.append(items[0]['Weapon tier1'][2])
-            all_locations(locations)
-            print('A new mage has stepped foot into the world of Pythorean!')
             break
         elif player['class'] == 'bandit':
             player['damage'] = 10
             player['hp'] = 100
+            player["Attack bandit"].append({'Name': 'Stab', 'MinDamage': 5, 'MaxDamage': 10})
             inventory.append(items[0]['Weapon tier1'][3])
-            all_locations(locations)
-            print('A new bandit has stepped foot into the world of Pythorean!')
             break
-    return player, items, inventory
+    return player
 
 
 def locked_room():
@@ -195,7 +170,6 @@ def locked_room():
     print("\nStepping through the secret passage, you find yourself on a path winding through an ethereal landscape, "
           "torn between realms.")
     print("Suddenly, the ground beneath you gives way, and you are consumed by swirling darkness...")
-    player_class()
 
 
 def generate_damage(attack):
@@ -208,8 +182,8 @@ def game_reload(player):
         all_locations(player['Location'])
 
 
-def battle(player, enemy, items):
-    # print("You encountered a wild", wild_enemy['Name'])
+ # def battle():
+     # print("You encountered a wild", wild_enemy['Name'])
     # print("It's a", wild_enemy['Type'], "Type!")
     # print("It has", wild_enemy['Health'], "Health")
     # print("It's a level", wild_enemy['Level'])
@@ -279,45 +253,47 @@ def battle(player, enemy, items):
     # print("The battle ended.")
     # if player['Level'] > 5:
     # print(f"Charmander leveled up to level {player['Level']}!")
-    enemy['hp'] -= player['attack']
-    return player, enemy, items
+    #enemy['hp'] -= player['attack']
+    # return player, enemy, items
 
 
-def all_locations(location_name, player, locations):
-    player['location'] = location_name
-
-    def Cursed_Library():
-        locations.remove("Cursed Library")
-        print(
-            f"\nYou awaken. Looking into the sky, the name Cursed Libray appears in bold writing. It's time to uncover "
-            f"your destiny and perhaps, the fate of Pythoria itself.")
-        game_mechanics()
-
-    def Fields_of_NullPointer():
-        current_location = "Fields of NullPointer"
-        print(
-            f"\nYou awaken. Looking into the sky, the name Fields of NullPointer appears in bold writing. It's time "
-            f"to uncover your destiny and perhaps, the fate of Pythoria itself.")
-
-        locations.remove("Fields of NullPointer")
-
-    def Castle_of_SegFault():
-        current_location = "Castle of SegFault"
-        print(
-            f"\nYou awaken. Looking into the sky, the name Castle of SegFault appears in bold writing. It's time to "
-            f"uncover your destiny and perhaps, the fate of Pythoria itself.")
-        locations.remove("Castle of SegFault")
-
-    chosen_location = random.choice(locations)
-    if chosen_location == locations[0]:
-        Cursed_Library()
-
-    elif chosen_location == locations[1]:
+def all_locations(player):
+    chosen_location = player['location']
+    if chosen_location == "Fields of NullPointer":
         Fields_of_NullPointer()
-
-    elif chosen_location == locations[2]:
+    elif chosen_location == "Cursed Library":
+        Cursed_Library()
+    elif chosen_location == "Castle of SegFault":
         Castle_of_SegFault()
 
 
+def Cursed_Library():
+    locations.remove("Cursed Library")
+    print(
+        f"\nYou awaken. Looking into the sky, the name Cursed Libray appears in bold writing. It's time to uncover "
+        f"your destiny and perhaps, the fate of Pythoria itself.")
+
+
+def Fields_of_NullPointer():
+    current_location = "Fields of NullPointer"
+    print(
+        f"\nYou awaken. Looking into the sky, the name Fields of NullPointer appears in bold writing. It's time "
+        f"to uncover your destiny and perhaps, the fate of Pythoria itself.")
+
+    locations.remove("Fields of NullPointer")
+
+
+def Castle_of_SegFault():
+    current_location = "Castle of SegFault"
+    print(
+        f"\nYou awaken. Looking into the sky, the name Castle of SegFault appears in bold writing. It's time to "
+        f"uncover your destiny and perhaps, the fate of Pythoria itself.")
+    locations.remove("Castle of SegFault")
+
+def main():
+    player = setup_player()  # Initialize the player dictionary
+    print_player_info(player)  # Print the player's details
+
 if __name__ == "__main__":
-    locked_room()
+    main()
+
