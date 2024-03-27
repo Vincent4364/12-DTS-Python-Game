@@ -1,31 +1,30 @@
 import random
 import time
 import os
-import sys
 
+#  time_sleep = time.sleep(2)
 random.seed(os.urandom(1024))
 
 
 def setup_player():
     player = {
         'name': introduction(),
-        'hp': 0,
-        'stamina': 0,
-        'level': 1,
-        'location': None,
+        'hp': 0,  # Set by player_class function
+        'stamina': 0,  # Set by player_class function
+        'level': 1,  # All characters start at one
+        'location': None,  # Will be set to current location of player
         'class': None,  # This will be set by the player_class function
-        'Attacks knight': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
-                           {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}],
-        'Attacks samurai': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
-                            {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}],
-        'Attacks mage': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
-                         {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}],
-        'Attacks bandit': [{'Name': '', 'MinDamage': 0, 'MaxDamage': 0},
-                           {'Name': '', 'MinDamage': 0, 'MaxDamage': 0}],
+        'Attacks knight': [{'Name': 'Slash', 'MinDamage': 5, 'MaxDamage': 10},
+                           {'Name': 'Great swing', 'MinDamage': 5, 'MaxDamage': 10}],
+        'Attacks samurai': [{'Name': 'bleed', 'MinDamage': 5, 'MaxDamage': 10},
+                            {'Name': 'split', 'MinDamage': 5, 'MaxDamage': 10}],
+        'Attacks mage': [{'Name': 'rock throw', 'MinDamage': 5, 'MaxDamage': 10},
+                         {'Name': 'azure pebble', 'MinDamage': 5, 'MaxDamage': 10}],
+        'Attacks bandit': [{'Name': 'Stab', 'MinDamage': 5, 'MaxDamage': 10},
+                           {'Name': 'cut', 'MinDamage': 5, 'MaxDamage': 10}],
     }
-    player = player_class(player)  # Now, we're properly passing the player dictionary
+    player = player_class(player)
     return player
-
 
 
 def wait_for_input():
@@ -35,19 +34,12 @@ def wait_for_input():
     return controls_read
 
 
-enemy = [
-    {
-        'basic enemy': [
-            {'name': 'Corrupted Code Fragment'},
-            {'hp': 50},
-            {"damage": 2},
-        ],
-        'advanced enemy': [
-            {'name': 'Unsolvable Bug'},
-            {'hp': 50},
-            {"damage": 2},
-        ]
-    }]
+enemies = [
+    {'Name': 'Corrupted Code Fragment', 'HP': 50, 'Damage': 10},
+    {'Name': 'Unsolvable Bug', 'HP': 50, 'Damage': 10},
+]
+
+wild_enemy = random.choice(enemies)
 
 items = [
     {
@@ -74,10 +66,6 @@ items = [
 ]
 
 
-#random_encounter = random.randint(0, 2)
-#wild_enemy = enemy[random_encounter]
-#enemy_attack_randomizer = random.randint(0, len(wild_enemy['Attack']) - 1)
-
 inventory = []
 locations = ["Cursed Library", "Fields of NullPointer", "Castle of SegFault"]
 
@@ -88,6 +76,7 @@ def introduction():
     print(f'Welcome {name}, to Dark Pythons: Echoes of the Fallen Code.')
     print('Controls: W,A,S,D to move directions, type in your preferred action when provided.')
     print("After every line of dialogue, the video game will wait for the enter key's input to continue:")
+    wait_for_input()
     print("Remember, this is a story game, so make sure you do everything you can for the full experience!")
     wait_for_input()
     print("In a world where reality is intertwined with the digital, an ancient curse has fallen over the land of "
@@ -99,6 +88,8 @@ def introduction():
 
     print('================================================================')
 
+    return name
+
 
 def print_player_info(player):
     print(f"\nPlayer Information:")
@@ -107,7 +98,19 @@ def print_player_info(player):
     print(f"HP: {player['hp']}")
     print(f"Stamina: {player['stamina']}")
     print(f"Level: {player['level']}")
-    # Add more details as needed.
+    if player['type'] == "knight":
+        print(f"Attack one: {player['Attacks knight'][0]}")
+        print(f"Attack two: {player['Attacks knight'][1]}")
+    elif player['type'] == "samurai":
+        print(f"Attack one: {player['Attacks samurai'][0]}")
+        print(f"Attack two: {player['Attacks samurai'][1]}")
+    elif player['type'] == "mage":
+        print(f"Attack one: {player['Attacks mage'][0]}")
+        print(f"Attack two: {player['Attacks mage'][1]}")
+    elif player['type'] == "bandit":
+        print(f"Attack one: {player['Attacks bandit'][0]}")
+        print(f"Attack two: {player['Attacks bandit'][1]}")
+    all_locations(player)
 
 
 def player_class(player):
@@ -118,28 +121,40 @@ def player_class(player):
                                 "fierce knight, a humble samurai, a keen mage, or a sneaky bandit. ("
                                 "knight/samurai/mage/bandit): ")
         if player['class'] == 'knight':
-            player['damage'] = 20
+            player['type'] = 'knight'
             player['hp'] = 100
-            player["Attack knight"].append({'Name': 'Slash', 'MinDamage': 5, 'MaxDamage': 10})
+            player["Attacks knight"].append({'Name': 'Slash', 'MinDamage': 5, 'MaxDamage': 10})
             inventory.append(items[0]['Weapon tier1'][0])
+            del player['Attacks samurai']
+            del player['Attacks mage']
+            del player['Attacks bandit']
             break
         elif player['class'] == 'samurai':
-            player['damage'] = 10
+            player['type'] = 'samurai'
             player['hp'] = 100
-            player["Attack samurai"].append({'Name': 'bleed', 'MinDamage': 5, 'MaxDamage': 10})
+            player["Attacks samurai"].append({'Name': 'bleed', 'MinDamage': 5, 'MaxDamage': 10})
             inventory.append(items[0]['Weapon tier1'][1])
+            del player['Attacks knight']
+            del player['Attacks mage']
+            del player['Attacks bandit']
             break
         elif player['class'] == 'mage':
-            player['damage'] = 10
+            player['type'] = 'mage'
             player['hp'] = 100
-            player["Attack mage"].append({'Name': 'rock sling', 'MinDamage': 5, 'MaxDamage': 10})
+            player["Attacks mage"].append({'Name': 'rock sling', 'MinDamage': 5, 'MaxDamage': 10})
             inventory.append(items[0]['Weapon tier1'][2])
+            del player['Attacks samurai']
+            del player['Attacks knight']
+            del player['Attacks bandit']
             break
         elif player['class'] == 'bandit':
-            player['damage'] = 10
+            player['type'] = 'bandit'
             player['hp'] = 100
-            player["Attack bandit"].append({'Name': 'Stab', 'MinDamage': 5, 'MaxDamage': 10})
+            player["Attacks bandit"].append({'Name': 'Stab', 'MinDamage': 5, 'MaxDamage': 10})
             inventory.append(items[0]['Weapon tier1'][3])
+            del player['Attacks samurai']
+            del player['Attacks mage']
+            del player['Attacks knight']
             break
     return player
 
@@ -178,104 +193,76 @@ def generate_damage(attack):
 
 def game_reload(player):
     if player['hp'] <= 0:
-        player['hp'] = 100
-        all_locations(player['Location'])
+        print("You died! Resetting game at the beginning of current level ")
+        if player['location'] == 'Fields of NullPointer':
+            Fields_of_NullPointer(player)
+        elif player['location'] == 'Cursed Library':
+            Cursed_Library(player)
+        elif player['location'] == 'Castle of SegFault':
+            Castle_of_SegFault(player)
 
 
- # def battle():
-     # print("You encountered a wild", wild_enemy['Name'])
-    # print("It's a", wild_enemy['Type'], "Type!")
-    # print("It has", wild_enemy['Health'], "Health")
-    # print("It's a level", wild_enemy['Level'])
+def battle(player):
+    print(f"While traversing {player['location']} you are attacked by an {wild_enemy['Name']}!")
+    while player['hp'] > 0 and wild_enemy['HP'] > 0:
+        player_action = input("Do you want to attack? (yes/no): ").lower()
+        if player_action == "yes":
+            # Assume player always uses the first attack in their class-specific attacks list.
+            if player['class'] in ['knight', 'samurai', 'mage', 'bandit']:
+                attack = player[f"Attacks {player['class']}"][0]
+                damage = generate_damage(attack)
+                print(f"You use {attack['Name']} dealing {damage} damage.")
+                wild_enemy['HP'] -= damage
 
-    #  while True:
-    #     till_encounter = random.randint(1, 2)
-    #     time.sleep(till_encounter)
-    #   print('Begin Battle!')
-    #  break
+            # Enemy's turn to attack
+            if wild_enemy['HP'] > 0:
+                print(f"The {wild_enemy['Name']} attacks you for {wild_enemy['Damage']} damage.")
+                player['hp'] -= wild_enemy['Damage']
 
-    # while player['Health'] > 0 and wild_enemy['Health'] > 0:
-    #    user_input = input('Enter 1 to attack, 2 to throw a pokeball, 3 to flee the battle: ')
+            # Display current health
+            print(f"Your HP: {player['hp']}, Enemy HP: {wild_enemy['HP']}")
+        elif player_action == "no":
+            print("You chose not to attack this turn.")
+            print(f"The {wild_enemy['Name']} attacks you for {wild_enemy['Damage']} damage.")
+            player['hp'] -= wild_enemy['Damage']
+        else:
+            print("Invalid action.")
 
-    #  if user_input == '1':
-    #   attack_choice = random.choice(player['Attacks'])
-    #   Damage_own = generate_damage(attack_choice)
-    #    print(player['Name'], 'attacked the wild', wild_enemy['Name'], 'with', attack_choice['Name'])
-    #  if player['Type'] == "Fire" and wild_enemy['Type'] == "Grass":
-    #     wild_enemy['Health'] -= Damage_own * 1.5
-    #   elif player['Type'] == "Fire" and wild_enemy['Type'] == "Water":
-    #      wild_enemy['Health'] -= Damage_own * 0.5
-    #  else:
-    #       wild_enemy['Health'] -= Damage_own
-    #  print("The attack did", Damage_own, 'damage')
-
-    #  if wild_enemy['Health'] <= 0:
-    #      break
-    # else:
-    #     print("The", wild_enemy['Name'], "has", wild_enemy['Health'], "health remaining")
-    #  till_encounter = random.randint(1, 2)
-    #  time.sleep(till_encounter)
-
-    # print("The wild", wild_enemy['Name'], 'attacked you back!')
-    # print(wild_enemy['Name'], 'used', wild_enemy['Attack'][enemy_attack_randomizer]['Name'])
-    #   Damage_enemy = generate_damage(wild_enemy['Attack'][enemy_attack_randomizer])
-
-    #  if player['Type'] == "Fire" and wild_enemy['Type'] == "Grass":
-    #     player['Health'] -= Damage_enemy * 1.5
-    #  elif player['Type'] == "Fire" and wild_enemy['Type'] == "Water":
-    #    player['Health'] -= Damage_enemy * 0.5
-    #  else:
-    #      player['Health'] -= Damage_enemy
-    #  print('The wild', wild_enemy['Name'], 'did', Damage_enemy, 'damage to', player['Name'])
-    #  print(player['Name'], 'has', player['Health'], 'health left')
-
-    # elif user_input == '2':
-    #    print('You fled the battle!')
-    #     break
-
-    # else:
-    # print("You can't do that")
-
-    #  if player['Health'] <= 0:
-    # print("All your health has been depleted!")
-    # print("Game is reloading from beginning of current area")
-    #   game_reload()
-    # elif wild_enemy['Health'] <= 0:
-    # print("The wild", wild_enemy['Name'], "fainted!")
-    # if wild_enemy['Level'] == 3:
-    #   player['Level'] += 0.25
-    # elif wild_enemy['Level'] == 4:
-    # player['Level'] += 0.5
-    # elif wild_enemy['Level'] == 5:
-    # player['Level'] += 0.75
-    # elif wild_enemy['Level'] == 6:
-    # player['Level'] += 1
-    # print("The battle ended.")
-    # if player['Level'] > 5:
-    # print(f"Charmander leveled up to level {player['Level']}!")
-    #enemy['hp'] -= player['attack']
-    # return player, enemy, items
+        if player['hp'] <= 0:
+            print("You were defeated!")
+        elif wild_enemy['HP'] <= 0:
+            print(f"You have defeated the {['Name']}!")
+            return True  # Indicate battle was won
+    wild_enemy["HP"] = 50
 
 
 def all_locations(player):
-    chosen_location = player['location']
-    if chosen_location == "Fields of NullPointer":
-        Fields_of_NullPointer()
-    elif chosen_location == "Cursed Library":
-        Cursed_Library()
-    elif chosen_location == "Castle of SegFault":
-        Castle_of_SegFault()
+    chosen_location = input("A UI system with 3 options appears before you. It reads A - Fields of NullPointer, "
+                            "B - Cursed Library, and C - Castle of SegFault. Which do you choose? ")
+    if chosen_location == "A":
+        Fields_of_NullPointer(player)
+    elif chosen_location == "B":
+        Cursed_Library(player)
+    elif chosen_location == "C":
+        Castle_of_SegFault(player)
+
+    battle_result = battle(player)
+    if battle_result:
+        print("After your victory, you proceed on your adventure.")
+    else:
+        print("Game over. Try again.")
 
 
-def Cursed_Library():
+def Cursed_Library(player):
+    player['location'] = "Cursed Library"
     locations.remove("Cursed Library")
     print(
         f"\nYou awaken. Looking into the sky, the name Cursed Libray appears in bold writing. It's time to uncover "
         f"your destiny and perhaps, the fate of Pythoria itself.")
 
 
-def Fields_of_NullPointer():
-    current_location = "Fields of NullPointer"
+def Fields_of_NullPointer(player):
+    player['location'] = "Fields of NullPointer"
     print(
         f"\nYou awaken. Looking into the sky, the name Fields of NullPointer appears in bold writing. It's time "
         f"to uncover your destiny and perhaps, the fate of Pythoria itself.")
@@ -283,16 +270,18 @@ def Fields_of_NullPointer():
     locations.remove("Fields of NullPointer")
 
 
-def Castle_of_SegFault():
-    current_location = "Castle of SegFault"
+def Castle_of_SegFault(player):
+    player['location'] = "Castle of SegFault"
     print(
         f"\nYou awaken. Looking into the sky, the name Castle of SegFault appears in bold writing. It's time to "
         f"uncover your destiny and perhaps, the fate of Pythoria itself.")
     locations.remove("Castle of SegFault")
 
+
 def main():
     player = setup_player()  # Initialize the player dictionary
     print_player_info(player)  # Print the player's details
+
 
 if __name__ == "__main__":
     main()
