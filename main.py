@@ -75,7 +75,7 @@ def introduction():
     print("")
     print(f'Welcome {name}, to Dark Pythons: Echoes of the Fallen Code.')
     print('Controls: W,A,S,D to move directions, type in your preferred action when provided.')
-    print("After every line of dialogue, the video game will wait for the enter key's input to continue:")
+    print("After every line of dialogue, the game will wait for the enter key's input to continue:")
     wait_for_input()
     print("Remember, this is a story game, so make sure you do everything you can for the full experience!")
     wait_for_input()
@@ -114,52 +114,30 @@ def print_player_info(player):
 
 
 def player_class(player):
+    class_choices = {
+        'knight': {'hp': 100, 'attacks': player['Attacks knight']},
+        'samurai': {'hp': 100, 'attacks': player['Attacks samurai']},
+        'mage': {'hp': 100, 'attacks': player['Attacks mage']},
+        'bandit': {'hp': 100, 'attacks': player['Attacks bandit']},
+    }
     while True:
         print("Welcome, fragmented one. You have been chosen by the order in hopes you have what it takes to find and "
               "reset the core of creation!")
-        player['class'] = input("The first step in your journey is picking your players class. Do you wish to be a "
+        class_choice = input("The first step in your journey is picking your players class. Do you wish to be a "
                                 "fierce knight, a humble samurai, a keen mage, or a sneaky bandit. ("
                                 "knight/samurai/mage/bandit): ")
-        if player['class'] == 'knight':
-            player['type'] = 'knight'
-            player['hp'] = 100
-            player["Attacks knight"].append({'Name': 'Slash', 'MinDamage': 5, 'MaxDamage': 10})
-            inventory.append(items[0]['Weapon tier1'][0])
-            del player['Attacks samurai']
-            del player['Attacks mage']
-            del player['Attacks bandit']
-            break
-        elif player['class'] == 'samurai':
-            player['type'] = 'samurai'
-            player['hp'] = 100
-            player["Attacks samurai"].append({'Name': 'bleed', 'MinDamage': 5, 'MaxDamage': 10})
-            inventory.append(items[0]['Weapon tier1'][1])
-            del player['Attacks knight']
-            del player['Attacks mage']
-            del player['Attacks bandit']
-            break
-        elif player['class'] == 'mage':
-            player['type'] = 'mage'
-            player['hp'] = 100
-            player["Attacks mage"].append({'Name': 'rock sling', 'MinDamage': 5, 'MaxDamage': 10})
-            inventory.append(items[0]['Weapon tier1'][2])
-            del player['Attacks samurai']
-            del player['Attacks knight']
-            del player['Attacks bandit']
-            break
-        elif player['class'] == 'bandit':
-            player['type'] = 'bandit'
-            player['hp'] = 100
-            player["Attacks bandit"].append({'Name': 'Stab', 'MinDamage': 5, 'MaxDamage': 10})
-            inventory.append(items[0]['Weapon tier1'][3])
-            del player['Attacks samurai']
-            del player['Attacks mage']
-            del player['Attacks knight']
-            break
-    return player
+        if class_choice in class_choices:
+            player.update({
+                'class': class_choice,
+                'hp': class_choices[class_choice]['hp'],
+                'attacks': class_choices[class_choice]['attacks'],
+            })
+            # Depending on class choice, appends the appropriate starting weapon to the inventory
+            inventory.append(items[0]['Weapon tier1'][['knight', 'samurai', 'mage', 'bandit'].index(class_choice)])
+            locked_room(player)
 
 
-def locked_room():
+def locked_room(player):
     print('You wake up in a dimly lit room. The air is thick with dust and the scent of ancient parchment. You '
           'remember nothing of how you came to be here, only that the darkness outside this room calls to you, '
           'whispering of a curse and a core...:')
@@ -185,10 +163,15 @@ def locked_room():
     print("\nStepping through the secret passage, you find yourself on a path winding through an ethereal landscape, "
           "torn between realms.")
     print("Suddenly, the ground beneath you gives way, and you are consumed by swirling darkness...")
+    all_locations(player)
 
 
-def generate_damage(attack):
-    return random.randint(attack['MinDamage'], attack['MaxDamage'])
+def choose_attack(player):
+    print("Choose your attack:")
+    for i, attack in enumerate(player['attacks']):
+        print(f"{i + 1}. {attack['Name']} (Damage: {attack['MinDamage']}-{attack['MaxDamage']})")
+    choice = int(input()) - 1
+    return player['attacks'][choice]
 
 
 def game_reload(player):
@@ -205,35 +188,38 @@ def game_reload(player):
 def battle(player):
     print(f"While traversing {player['location']} you are attacked by an {wild_enemy['Name']}!")
     while player['hp'] > 0 and wild_enemy['HP'] > 0:
-        player_action = input("Do you want to attack? (yes/no): ").lower()
-        if player_action == "yes":
-            # Assume player always uses the first attack in their class-specific attacks list.
-            if player['class'] in ['knight', 'samurai', 'mage', 'bandit']:
-                attack = player[f"Attacks {player['class']}"][0]
-                damage = generate_damage(attack)
-                print(f"You use {attack['Name']} dealing {damage} damage.")
-                wild_enemy['HP'] -= damage
+        player_action = input("Do you want to attack, run, or use an item? (attack/run/item): ").lower()
+        if player_action == "attack":
+            chosen_attack = choose_attack(player)
+            damage = random.randint(chosen_attack['MinDamage'], chosen_attack['MaxDamage'])
+            print(f"You use {chosen_attack['Name']} dealing {damage} damage.")
+            wild_enemy['HP'] -= damage
+            if wild_enemy['HP'] <= 0:
+                print(f"You have defeated the {wild_enemy['Name']}!")
+                wild_enemy['HP'] = 50  # Reset enemy HP for future battles
+                return True  # Battle won
+        elif player_action == "run":
+            print("You successfully escape the battle.")
+            return False  # Battle escaped
+        elif player_action == "item":
+            player_inventory()  # Assuming this function lets the player use an item
+        else:
+            print("Invalid action. Please choose again.")
 
-            # Enemy's turn to attack
-            if wild_enemy['HP'] > 0:
-                print(f"The {wild_enemy['Name']} attacks you for {wild_enemy['Damage']} damage.")
-                player['hp'] -= wild_enemy['Damage']
-
-            # Display current health
-            print(f"Your HP: {player['hp']}, Enemy HP: {wild_enemy['HP']}")
-        elif player_action == "no":
-            print("You chose not to attack this turn.")
+        # Enemy's turn to attack if they're still alive
+        if wild_enemy['HP'] > 0:
             print(f"The {wild_enemy['Name']} attacks you for {wild_enemy['Damage']} damage.")
             player['hp'] -= wild_enemy['Damage']
-        else:
-            print("Invalid action.")
+            if player['hp'] <= 0:
+                print("You were defeated!")
+                wild_enemy['HP'] = 50  # Reset enemy HP for future battles
+                return False  # Battle lost
 
-        if player['hp'] <= 0:
-            print("You were defeated!")
-        elif wild_enemy['HP'] <= 0:
-            print(f"You have defeated the {['Name']}!")
-            return True  # Indicate battle was won
-    wild_enemy["HP"] = 50
+        print(f"Your HP: {player['hp']}, Enemy HP: {wild_enemy['HP']}")
+
+
+def player_inventory():
+    pass
 
 
 def all_locations(player):
@@ -250,12 +236,11 @@ def all_locations(player):
     if battle_result:
         print("After your victory, you proceed on your adventure.")
     else:
-        print("Game over. Try again.")
+        print("After escaping from the enemy, you proceed on your adventure.")
 
 
 def Cursed_Library(player):
     player['location'] = "Cursed Library"
-    locations.remove("Cursed Library")
     print(
         f"\nYou awaken. Looking into the sky, the name Cursed Libray appears in bold writing. It's time to uncover "
         f"your destiny and perhaps, the fate of Pythoria itself.")
@@ -267,20 +252,16 @@ def Fields_of_NullPointer(player):
         f"\nYou awaken. Looking into the sky, the name Fields of NullPointer appears in bold writing. It's time "
         f"to uncover your destiny and perhaps, the fate of Pythoria itself.")
 
-    locations.remove("Fields of NullPointer")
-
 
 def Castle_of_SegFault(player):
     player['location'] = "Castle of SegFault"
     print(
         f"\nYou awaken. Looking into the sky, the name Castle of SegFault appears in bold writing. It's time to "
         f"uncover your destiny and perhaps, the fate of Pythoria itself.")
-    locations.remove("Castle of SegFault")
 
 
 def main():
-    player = setup_player()  # Initialize the player dictionary
-    print_player_info(player)  # Print the player's details
+    setup_player()
 
 
 if __name__ == "__main__":
