@@ -23,6 +23,7 @@ def setup_player():
         'Attacks bandit': [{'Name': 'Stab', 'MinDamage': 5, 'MaxDamage': 10},
                            {'Name': 'cut', 'MinDamage': 5, 'MaxDamage': 10}],
     }
+
     player = player_class(player)
     return player
 
@@ -37,6 +38,11 @@ def wait_for_input():
 enemies = [
     {'Name': 'Corrupted Code Fragment', 'HP': 50, 'Damage': 10},
     {'Name': 'Unsolvable Bug', 'HP': 50, 'Damage': 10},
+]
+
+boss_enemies = [
+    {'Name': 'Architect of Desolation', 'HP': 100, 'Damage': 15},
+    {'Name': '', 'HP': 50, 'Damage': 10},
 ]
 
 wild_enemy = random.choice(enemies)
@@ -168,7 +174,10 @@ def locked_room(player):
 
 def choose_attack(player):
     print("Choose your attack:")
-    for i, attack in enumerate(player['attacks']):
+    for i, attack in enumerate(player['attacks']):  # A loop that iterates over a list of dictionaries assigning each
+        # dictionary to a variable (attack) and its index (i) in turn. This allows me to access each dictionary in
+        # the list by its index.
+
         print(f"{i + 1}. {attack['Name']} (Damage: {attack['MinDamage']}-{attack['MaxDamage']})")
     choice = int(input()) - 1
     return player['attacks'][choice]
@@ -185,23 +194,33 @@ def game_reload(player):
             Castle_of_SegFault(player)
 
 
-def battle(player):
+def attack_system(player):
+    player_action = input("Do you want to attack, run, or use an item? (attack/run/item): ").lower()
+    if player_action == "attack":
+        chosen_attack = choose_attack(player)
+        damage = random.randint(chosen_attack['MinDamage'], chosen_attack['MaxDamage'])
+
+        return damage, chosen_attack, 'attack'
+    elif player_action == "run":
+        print("You successfully escape the battle.")
+        return 'run'
+
+
+def battle(player, chosen_attack, damage):
     print(f"While traversing {player['location']} you are attacked by an {wild_enemy['Name']}!")
     while player['hp'] > 0 and wild_enemy['HP'] > 0:
-        player_action = input("Do you want to attack, run, or use an item? (attack/run/item): ").lower()
-        if player_action == "attack":
-            chosen_attack = choose_attack(player)
-            damage = random.randint(chosen_attack['MinDamage'], chosen_attack['MaxDamage'])
-            print(f"You use {chosen_attack['Name']} dealing {damage} damage.")
+        attack_system(player)
+        if attack_system(player) == 'attack':
+            print(f"You use {chosen_attack} dealing {damage} damage.")
             wild_enemy['HP'] -= damage
             if wild_enemy['HP'] <= 0:
                 print(f"You have defeated the {wild_enemy['Name']}!")
                 wild_enemy['HP'] = 50  # Reset enemy HP for future battles
-                return True  # Battle won
-        elif player_action == "run":
-            print("You successfully escape the battle.")
+                return
+        elif attack_system(player) == 'run':
+            print(f"You run away from the {wild_enemy['Name']}.")
             return False  # Battle escaped
-        elif player_action == "item":
+        elif attack_system(player) == "item":
             player_inventory()  # Assuming this function lets the player use an item
         else:
             print("Invalid action. Please choose again.")
@@ -216,6 +235,62 @@ def battle(player):
                 return False  # Battle lost
 
         print(f"Your HP: {player['hp']}, Enemy HP: {wild_enemy['HP']}")
+
+
+def boss_battle(player, boss_enemies):
+    while player['location'] == 'Cursed Library':
+        rounds = 1
+        boss_name = boss_enemies['Name'][0]
+        boss_initial_hp = boss_enemies['HP'][0]
+        print(f"The battle against {boss_enemies['Name']} begins!")
+        return rounds, boss_name, boss_initial_hp
+        break
+
+    while player['HP'] > 0 and boss_initial_hp > 0:
+        print(f"\n--- Round {rounds} ---")
+        attack_system(player)
+        chosen_attack = attack_system(chosen_attack)
+        damage = attack_system(damage)
+        print(f"You deal {damage} damage to {boss_name}.")
+        boss_enemies['HP'][0] -= damage
+        if boss_enemies['hp'][0] > 0:
+            player['HP'] -= boss_attack
+            print(f"{boss_name} deals {boss_attack} damage to you.")
+
+        # Boss healing mechanic, activates once per battle, when below 50% HP for the first time.
+        if boss['HP'] < boss_initial_hp / 2 and 'healed' not in boss:
+            heal_amount = random.randint(20, 40)
+            boss['HP'] += heal_amount
+            boss['healed'] = True  # Ensure the boss can only heal once per battle.
+            print(f"{boss['Name']} codes the power to heal themselves, restoring {heal_amount} HP!")
+
+        if player['HP'] <= 0:
+            print("You have been defeated. The world dims as the Architect's laughter echoes through the library.")
+            return False
+
+        if boss['HP'] <= 0:
+            print(
+                f"{boss['Name']} has been defeated! Peace returns to the library as the corrupted code dissolves into nothingness.")
+            return True
+
+        # Check if it's time to move to the next round or end the battle.
+        if rounds == 2:
+            print("The battle intensifies as you both prepare for the final clash.")
+        elif rounds > 2:
+            break  # Just in case, prevents infinite loop if something goes wrong.
+
+        round += 1
+        wait_for_input()  # Assuming this is to pause the game, waiting for the player to press a key.
+
+    # In case the battle somehow continues beyond two rounds, this ensures an outcome.
+    if player['HP'] > 0:
+        print(
+            "In a last, desperate effort, you finally overcome the Architect of Desolation. The library is safe, for now.")
+        return True
+    else:
+        print(
+            "Exhausted and beaten, you fall to the Architect of Desolation. This is not the end, however; you will return.")
+        return False
 
 
 def player_inventory():
@@ -241,9 +316,47 @@ def all_locations(player):
 
 def Cursed_Library(player):
     player['location'] = "Cursed Library"
-    print(
-        f"\nYou awaken. Looking into the sky, the name Cursed Libray appears in bold writing. It's time to uncover "
-        f"your destiny and perhaps, the fate of Pythoria itself.")
+    print("\nAs you step through the archaic, towering doors of the Cursed Library, the scent of ancient knowledge and forgotten tales fills your nostrils. Shelves upon shelves of glowing tomes line the endless halls, each book a prisoner of dark magic.")
+    wait_for_input()
+
+    print("\nYou're approached by an ethereal librarian, a ghostly figure bound to serve the library for eternity. 'Welcome, traveler,' the librarian whispers. 'Beware the corrupted knowledge and the guardians that protect it. Seek out the Tome of Reset to break the curse. But first, prove your worth.'")
+    wait_for_input()
+
+    print("\nTwo corrupted guardians approach, their forms flickering between reality and code. It's time to battle.")
+
+    # First Battle
+    if not boss_battle(player):
+        game_reload(player)
+        return
+
+    print("\nWith the guardians defeated, the librarian nods in approval. 'You possess strength and resolve. The Tome of Reset lies beyond the Great Hall, guarded by the Master of Bugs. Prepare yourself.'")
+    wait_for_input()
+
+    # Introducing a New NPC: The Lost Coder
+    print("\nVenturing deeper, you encounter a Lost Coder, trapped in the library's curse. 'I can offer you assistance,' the coder says, handing you a potent healing code fragment.")
+    # This would ideally add a healing item to the player's inventory
+    print("'Use it wisely, for the Master of Bugs is no ordinary foe.'")
+    wait_for_input()
+
+    # Approaching the Boss Battle
+    print("\nThe Great Hall looms before you, vast and filled with the hum of corrupted data. At its center, the Master of Bugs, a colossal entity of code and malice, guards the Tome of Reset.")
+    print("'Foolish traveler,' it booms. 'You dare challenge my dominion? Come then, and fall like those before you.'")
+    wait_for_input()
+
+    # Boss Battle
+    if not boss_battle(player):
+        game_reload(player)
+        return
+
+    print("\nAs the Master of Bugs dissolves into digital dust, the Tome of Reset appears before you. With a hesitant hand, you open the tome, and bright code streams forth, washing over the library.")
+    wait_for_input()
+
+    print("\nA peaceful silence settles. The curse is lifted. The librarian, now free, smiles at you. 'Thank you, brave hero. The Cursed Library is now a sanctuary of knowledge once again.'")
+    print("\nYour journey in the Cursed Library concludes, but many more await in the land of Pythoria...")
+    wait_for_input()
+
+    # Resetting the player's location or directing them to the next part of the adventure
+    all_locations(player)
 
 
 def Fields_of_NullPointer(player):
