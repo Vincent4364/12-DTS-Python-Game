@@ -14,14 +14,14 @@ def setup_player():
         'level': 1,  # All characters start at one, players level
         'location': None,  # Will be set to current location of player
         'class': None,  # This will be set by the player_class function
-        'Attacks knight': [{'Name': 'Slash', 'MinDamage': 5, 'MaxDamage': 10},
-                           {'Name': 'Great swing', 'MinDamage': 5, 'MaxDamage': 10}],
-        'Attacks samurai': [{'Name': 'bleed', 'MinDamage': 5, 'MaxDamage': 10},
-                            {'Name': 'split', 'MinDamage': 5, 'MaxDamage': 10}],
-        'Attacks mage': [{'Name': 'rock throw', 'MinDamage': 5, 'MaxDamage': 10},
-                         {'Name': 'azure pebble', 'MinDamage': 5, 'MaxDamage': 10}],
-        'Attacks bandit': [{'Name': 'Stab', 'MinDamage': 5, 'MaxDamage': 10},
-                           {'Name': 'cut', 'MinDamage': 5, 'MaxDamage': 10}],
+        'Attacks knight': [{'Name': 'Slash', 'MinDamage': 7, 'MaxDamage': 9},
+                           {'Name': 'Great swing', 'Damage': 9}],
+        'Attacks samurai': [{'Name': 'bleed', 'MinDamage': 4, 'MaxDamage': 12},
+                            {'Name': 'split', 'Damage': 7}],
+        'Attacks mage': [{'Name': 'rock throw', 'MinDamage': 8, 'MaxDamage': 10},
+                         {'Name': 'azure pebble', 'Damage': 9}],
+        'Attacks bandit': [{'Name': 'Stab', 'MinDamage': 5, 'MaxDamage': 11},
+                           {'Name': 'cut', 'Damage': 9}],
     }
 
     return player_class(player)
@@ -30,7 +30,7 @@ def setup_player():
 def wait_for_input():
     print('')
     controls_read = input("0 to restart game, any other key to continue: ")
-    while controls_read == "":
+    while controls_read == "1":
         print('')
         break
     if controls_read == '0':
@@ -46,33 +46,14 @@ enemies = [
 
 boss_enemies = [
     {'Name': 'Architect of Desolation', 'HP': 100, 'Attack_Name': 'Eclipse of Ruin', 'Damage': random.randint(10,15)},
-    {'Name': '', 'HP': 150, 'Attack_Name': 'pass', 'Damage': random.randint(15,20)},
-    {'Name': '', 'HP': 200, 'Attack_Name': 'pass', 'Damage': random.randint(20,25)},
+    {'Name': 'The Eternal Compiler', 'HP': 150, 'Attack_Name': 'pass', 'Damage': random.randint(15,20)},
+    {'Name': 'Pyroforge Incendrath', 'HP': 200, 'Attack_Name': 'pass', 'Damage': random.randint(20,25)},
 ]
 
 wild_enemy = random.choice(enemies)
 
 items = [
     {
-        'Weapon tier1': [
-            {'Type': 'Sword', 'Name': 'SharpArray', 'Damage': 8},  # Starting weapon for Knight class
-            {'Type': 'Katana', 'Name': 'CyberSlicer', 'Damage': 7},  # Starting weapon for Samurai class
-            {'Type': 'Staff', 'Name': 'CodeCaster', 'Damage': 8},  # Starting weapon for Mage class
-            {'Type': 'Dagger', 'Name': 'AsyncEdge', 'Damage': 6},  # Starting weapon for Bandit class
-        ],
-        'Weapon tier2': [
-            {'Type': 'Sword', 'Name': 'RecurseRipper', 'Damage': 15},
-            {'Type': 'Katana', 'Name': 'SliceIndexer', 'Damage': 14},
-            {'Type': 'Staff', 'Name': 'GambitGenerator', 'Damage': 16},
-            {'Type': 'Dagger', 'Name': 'FatalFloat', 'Damage': 13}
-        ],
-        'Weapon tier3': [
-            {'Type': 'Sword', 'Name': 'DefBlade', 'Damage': 23},
-            # Combining the Python function definition keyword def with "Blade", suggesting a sword that can define or alter reality itself, following the rules of its wielder, much like a function follows its defined parameters and actions.
-            {'Type': 'Katana', 'Name': 'CyberShinobi', 'Damage': 21},
-            {'Type': 'Staff', 'Name': 'YieldScepter', 'Damage': 22},
-            {'Type': 'Dagger', 'Name': 'ByteBlade', 'Damage': 20}
-            ],
         'Healing Items': [
             {'Type': 'Healing Item', 'Name': 'Potent Health Potion', 'Potency': 25}
             ]
@@ -191,7 +172,10 @@ def locked_room(player):
 def choose_attack(player):
     print("Choose your attack:")
     for i, attack in enumerate(player['attacks']):
-        print(f"{i + 1}. {attack['Name']} (Damage: {attack['MinDamage']}-{attack['MaxDamage']})")
+        if i == 0:
+            print(f"{i + 1}. {attack['Name']} (Damage: {attack['MinDamage']}-{attack['MaxDamage']})")
+        elif i == 1:
+            print(f"{i + 1}. {attack['Name']} (Damage: {attack['Damage']})")
     choice = int(input()) - 1
     return choice
 
@@ -213,55 +197,60 @@ def attack_system(player):
     if player_action == 'attack':
         chosen_attack_index = choose_attack(player)
         chosen_attack = player['attacks'][chosen_attack_index]
-        damage = random.randint(chosen_attack['MinDamage'], chosen_attack['MaxDamage'])
+
+        if 'MinDamage' in chosen_attack and 'MaxDamage' in chosen_attack:  # If chosen attack has both Min and MaxDamage keys
+            damage = random.randint(chosen_attack['MinDamage'], chosen_attack['MaxDamage'])
+        elif 'Damage' in chosen_attack:  # If chosen attack has a fixed 'Damage' value
+            damage = chosen_attack['Damage']
+        else:
+            raise ValueError("Invalid attack configuration.")  # Handles an unexpected case
+
         return damage, chosen_attack['Name'], player_action
+
     else:
         return player_action
 
 
 def battle(player):
-    action_result = attack_system(player)
-    if isinstance(action_result, tuple):  # checks if action_result is an instance of a tuple
-        damage, chosen_attack_name, _ = action_result  # unpacks the values from the action result tuple into three
-        # separate variables ( _ is used as a placeholder for the third variable which is not needed for the function)
-    if action_result == 'attack':
-        print(f"You use {action_result[1]} dealing {action_result[0]} damage.")
-        enemies[0]['HP'] -= action_result[0]
-        if enemies[0]['HP'] <= 0:
-            print(f"You have defeated the {enemies[0]['Name']}!")
-            enemies[0]['HP'] = 35  # Reset enemy HP for future battles
-            return True
-    elif action_result == 'run':
-        print(f"You attempt to away from the {enemies[0]['Name']}.")
-        success_rate = random.randint(0,10)
-        if success_rate == range(1,3):
-            print(f"You manage to escape the {enemies[0]['Name']}.")
-            enemies[0]['HP'] = 35  # Reset enemy HP for future battles
-            return True
+    enemy = None
+    if player['location'] == 'Cursed Library':
+        enemy = enemies[0]
+    elif player['location'] == 'Archives of Legacy Code':
+        enemy = enemies[1]
+    elif player['location'] == 'Enchanted Forge of Debugging':
+        enemy = enemies[2]
+    while True:
+        action_result = attack_system(player)
+        if isinstance(action_result, tuple):  # checks if action_result is an instance of a tuple
+            damage, chosen_attack_name, _ = action_result  # unpacks the values from the action result tuple into three
+            # separate variables ( _ is used as a placeholder for the third variable which is not needed for the function)
+            print(f"You use {chosen_attack_name} dealing {damage} damage.")
+            enemy['HP'] -= damage
+            if enemy['HP'] <= 0:
+                print(f"You have defeated the {enemy['Name']}!")
+                enemy['HP'] = 35  # Reset enemy HP for future battles
+                break
+        elif action_result == "item":
+            player_inventory(player)
+            pass
         else:
-            print(f"You are unable to escape the {enemies[0]['Name']}.")
-            print("The enemy uses this chance to attack you!")
-            return False
-    elif action_result == "item":
-        player_inventory(player)
-        pass
-    else:
-        print("Invalid action. Please choose again.")
+            print("Invalid action. Please choose again.")
+            continue
 
-    # Enemy's turn to attack
-    if wild_enemy['HP'] > 0:
-        print(f"The {wild_enemy['Name']} attacks you for {wild_enemy['Damage']} damage.")
-        player['hp'] -= wild_enemy['Damage']
-        if player['hp'] <= 0:
-            print("You were defeated!")
-            game_reload(player)
-            return False
+        # Enemy's turn to attack
+        if enemy['HP'] > 0:
+            print(f"The {enemy['Name']} attacks you for {enemy['Damage']} damage.")
+            player['hp'] -= enemy['Damage']
+            if player['hp'] <= 0:
+                print("You were defeated!")
+                game_reload(player)
+                return False
 
-    print(f"Your HP: {player['hp']}, Enemy HP: {wild_enemy['HP']}")
-    return None  # The battle continues
+        print(f"Your HP: {player['hp']}, Enemy HP: {enemy['HP']}")
+        continue
 
 
-def cursed_library_puzzle(player):
+def cursed_library_puzzle():
     print("\nThe Ethereal Librarian presents you with a final challenge: 'To find the Tome of Reset, you must first "
           "solve this riddle: I speak without a mouth and hear without ears. I have no body, but I come alive with "
           "wind. What am I?'")
@@ -308,18 +297,22 @@ def boss_enemy_info(player):
         rounds = 1
         boss_name = boss_enemy['Name']
         boss_initial_hp = boss_enemy['HP']
+        boss_attack = boss_enemy['Attack']
+        boss_attack_name = boss_enemy['Attack_Name']
         print(f"The battle against {boss_enemy['Name']} begins!")
-        return rounds, boss_name, boss_initial_hp, boss_enemy
+        return rounds, boss_name, boss_initial_hp, boss_enemy, boss_attack, boss_attack_name
 
-    while player['location'] == "Fields of NullPointer":
+    while player['location'] == "Enchanted Forge of Debugging":
         boss_enemy = boss_enemies[1]
         rounds = 2
         boss_name = boss_enemy['Name']
         boss_initial_hp = boss_enemy['HP']
+        boss_attack_name = boss_enemy['Attack_Name']
+        boss_attack = boss_enemy['Attack']
         print(f"The battle against {boss_enemy['Name']} begins!")
-        return rounds, boss_name, boss_initial_hp, boss_enemy
+        return rounds, boss_name, boss_initial_hp, boss_enemy, boss_attack, boss_attack_name
 
-    while player['location'] == "Castle of SegFault":
+    while player['location'] == "Archives of Legacy Code":
         boss_enemy = boss_enemies[2]
         rounds = 3
         boss_name = boss_enemy['Name']
@@ -331,72 +324,80 @@ def boss_enemy_info(player):
 
 
 def boss_enemy_battle(player):
-    boss_enemy_info(player)
-    rounds, boss_initial_hp, boss_name, boss_enemy, boss_attack, boss_attack_name = boss_enemy_info(player)
-    chosen_attack, damage = attack_system(player)
-    while player['HP'] > 0 and boss_initial_hp > 0:
-        print(f"\n--- Round {rounds} ---")
-        attack_system(player)
-        chosen_attack = attack_system(chosen_attack)
-        damage = attack_system(damage)
-        print(f"You deal {damage} damage to {boss_name}.")
-        boss_enemy['HP'] -= damage
-        if boss_enemy['HP'] > 0:
-            player['HP'] -= boss_attack
-            print(f"{boss_name} attacks you with {boss_attack_name} dealing {boss_attack} damage!")
+    rounds, boss_name, boss_initial_hp, boss_enemy, boss_attack, boss_attack_name = boss_enemy_info(player)
 
-        # Boss healing mechanic, activates once per battle, when below 50% HP for the first time.
+    print(f"\n--- Round 1: The battle against {boss_name} begins! ---")
+    current_round = 1
+
+    while player['hp'] > 0 and boss_enemy['HP'] > 0:
+        # Player's turn
+        action_result = attack_system(player)
+        if isinstance(action_result, tuple):
+            damage, chosen_attack_name, _ = action_result
+            print(f"You use {chosen_attack_name} dealing {damage} damage.")
+            boss_enemy['HP'] -= damage
+            if boss_enemy['HP'] <= 0:
+                print(f"You have defeated {boss_name}!")
+                break
+        else:
+            print("Invalid action. Please choose again.")
+            continue
+
+        # Boss's turn
+        if boss_enemy['HP'] > 0:
+            print(f"{boss_name} attacks you with {boss_attack_name} dealing {boss_attack} damage.")
+            player['hp'] -= boss_attack
+            if player['hp'] <= 0:
+                print("You were defeated!")
+                game_reload(player)
+                return False
+
+        print(f"Your HP: {player['hp']}, {boss_name}'s HP: {boss_enemy['HP']}")
+
+        # Boss healing mechanic
         if boss_enemy['HP'] < boss_initial_hp / 2 and 'healed' not in boss_enemy:
             heal_amount = random.randint(20, 40)
             boss_enemy['HP'] += heal_amount
-            boss_enemy['healed'] = True  # Ensure the boss can only heal once per battle.
-            print(f"{boss_enemy['Name']} codes the power to heal themselves, restoring {heal_amount} HP!")
+            boss_enemy['healed'] = True
+            print(f"{boss_name} uses their power to heal, restoring {heal_amount} HP!")
 
-        if player['HP'] <= 0:
-            print("You have been defeated. The world dims as the Architect's laughter echoes through the library.")
-            return False
+        current_round += 1
+        if current_round > rounds:
+            print("The battle has reached its climax!")
+        else:
+            print(f"\n--- Round {current_round}: The battle continues! ---")
 
-        if boss_enemy['HP'] <= 0:
-            print(
-                f"{boss_enemy['Name']} has been defeated! Peace returns to the library as the corrupted code dissolves into nothingness.")
-            return True
+        # A function to wait for input could be placed here if needed
+        # e.g., wait_for_input()
 
-        # Check if it's time to move to the next round or end the battle.
-        if rounds == 2:
-            print("The battle intensifies as you both prepare for the final clash.")
-        elif rounds > 2:
-            break  # Just in case, prevents infinite loop if something goes wrong.
-
-        rounds += 1
-        wait_for_input()  # Assuming this is to pause the game, waiting for the player to press a key.
-
-    # In case the battle somehow continues beyond two rounds, this ensures an outcome.
-    if player['HP'] > 0:
-        print(
-            "In a last, desperate effort, you finally overcome the Architect of Desolation. The library is safe, for now.")
+    if player['hp'] > 0:
+        print(f"With {boss_name} defeated, the path forward is clear.")
         return True
     else:
-        print(
-            "Exhausted and beaten, you fall to the Architect of Desolation. This is not the end, however; you will return.")
+        print(f"As darkness closes in, the last thing you hear is {boss_name}'s triumphant roar.")
         return False
 
 
 def player_inventory(player):
-    user_input = input("(potions/weapons)")
-    if user_input == "potions":
-        user_choice = input("Which potion will you use?")
-        print("You use a potion to heal yourself for 20 HP.")
-        player['hp'] += 20
-    elif user_input == "weapons":
-        print("You use a weapon to heal yourself for 20 HP.")
-        player['hp'] += 20
+    user_choice = input("Use a potion to regain health? (yes/no)").lower()
+    while True:
+        if user_choice == "yes" and inventory[0]['Amount'] > 0:
+            player['hp'] += 20
+            break
+        elif user_choice == "yes" and inventory[0]['Amount'] == 0:
+            print("You don't have a potion in your inventory.")
+            break
+        elif user_choice == "no":
+            print("You decided against using a potion")
+        else:
+            print("Invalid input, your life depends on make the right decisions")
 
 
 def Cursed_Library(player):
     player['location'] = "Cursed Library"
     print("Confused and distraught, you stumble to your feet.")
     wait_for_input()
-    print('Your met error filled IDE which prints the simple message, "Welcome to the Cursed Library"')
+    print('Met with an error filled IDE, a message presents itself, "Welcome to the Cursed Library"')
     wait_for_input()
     print("\nWalking past the IDE, you find yourself before two archaic, towering doors. You step through, and the scent of ancient knowledge and forgotten tales fills your nostrils. Shelves upon shelves of glowing tomes line the endless halls, each tome another player, lost within the librarys halls, for all eternity.")
     wait_for_input()
@@ -419,19 +420,18 @@ def Cursed_Library(player):
         game_reload(player)
         return
 
-    print("\nWith the guardians defeated, the librarian nods in approval. 'You possess strength and resolve. The Tome "
-          "of Reset lies beyond the Great Hall, guarded by the Architect of Desolation. Prepare yourself.'")
+    print("\nWith the guardians defeated, the librarian nods in approval. 'You possess strength and resolve. The Archives of Legacy Code lies beyond the Great Hall, guarded by the Architect of Desolation. Prepare yourself.'")
     wait_for_input()
 
     # Introducing a New NPC: The Lost Coder
     print("\nVenturing deeper, you encounter a Lost Coder, trapped in the library's curse. 'I can offer you "
           "assistance,' the coder says, handing you a potent healing code fragment.")
     items[0]['Healing Items'][0]['Amount'] += 1
-    print("'Use it wisely, for the Master of Bugs is no ordinary foe.'")
+    print("'Use it wisely, for the Architect is no ordinary foe.'")
     wait_for_input()
 
     # Approaching the Boss Battle
-    print("\nThe Great Hall looms before you, vast and filled with the hum of corrupted data. At its center, the Architect of Desolation, a colossal entity of code and malice, guards the Tome of Reset.")
+    print("\nThe Great Hall looms before you, vast and filled with the hum of corrupted data. At its center, the Architect of Desolation, a colossal entity of code and malice, guards your entrance to the Archives.")
     wait_for_input()
     print("'Foolish traveler,' it booms. 'You dare challenge my dominion? Come then, and fall like those before you.'")
     boss_enemy_battle(player)
@@ -441,17 +441,12 @@ def Cursed_Library(player):
         game_reload(player)
         return
 
-    print("As the architect of desolation begins to crumble, you turn around, expecting to be granted passage, but the librarains aura implys otherwise.")
+    print("As the Architect of Desolation crumbles, you turn around, expecting to be granted passage, but the librarains aura implys otherwise.")
     wait_for_input()
     print('"The librarian mumbles, "you have one final challenge".')
     archives_of_legacy_code_puzzle()
 
-    if not archives_of_legacy_code_puzzle():
-        game_reload(player)
-        return
-
-    # Resetting the player's location or directing them to the next part of the adventure
-    Archives_of_Legacy_Code(player)
+    Archives_of_Legacy_Code(player)  # Directs player to next Archives_of_Legacy_Code function
 
 
 def Archives_of_Legacy_Code(player):
@@ -477,16 +472,28 @@ def Archives_of_Legacy_Code(player):
           "sought to blend magic and technology. You learn of the Original Bug, a flaw so severe that it "
           "threatened to unravel the fabric of reality.")
     wait_for_input()
-
-    # Boss Battle: Archivist of Corruption
-    print("\nAs you delve deeper into the Archives, you encounter the Archivist of Corruption, a twisted amalgamation "
-          "of corrupted code and malevolent energy. It guards the darkest secrets of Pythoria's past.")
-    wait_for_input()
-    print("The Archivist's eyes flare with dark power as it prepares to strike. It's time to battle!")
+    print("Jealous of your fated arrival to Pythoria, the seemingly tame avatar of the Archive leaps at you without "
+          "hesitation, and your battle begins.")
     battle(player)
 
-    # Boss Battle Outcome
     if not battle(player):
+        game_reload(player)
+        return
+
+    print("Defeated, the mysterious entity is decoded from reality, leaving behind only a robe with two potions "
+          "contained within the pockets. You pick them up.")
+    items[0]['Healing Items'][0]['Amount'] += 2
+
+    # Boss Battle: Archivist of Corruption
+    print("\nAs you continue with your journey, delving deeper and deeper into the Archives, you encounter the "
+          "The eternal compiler, a twisted amalgamation"
+          "of corrupted code and compiled knowledge. It guards the darkest secrets of Pythoria's past.")
+    wait_for_input()
+    print("The eternal compiler's eyes flare with dark power as it prepares to strike. It's time to battle!")
+    boss_enemy_battle(player)
+
+    # Boss Battle Outcome
+    if not boss_enemy_battle(player):
         game_reload(player)
         return
 
@@ -502,7 +509,7 @@ def Archives_of_Legacy_Code(player):
 
     print("'To seek the forge is to seek the salvation of Pythoria,' the guardian's voice echoes in your mind as "
           "you prepare to leave the Archives. 'But be forewarned, the path is perilous and the forge's protector, "
-          "the Fragmented Sentinel, allows no one to wield its power unchecked.'")
+          "Pyroforge Incendrath, allows no one to wield its power unchecked.'")
     wait_for_input()
 
     print("\nWith newfound knowledge and determination, you step out of the Archives of Legacy Code. Ahead lies the "
@@ -545,15 +552,15 @@ def Enchanted_Forge_of_Debugging(player):
     print("\nAs you delve deeper into the forge, you encounter an Apprentice Debugger, eager but overwhelmed. 'I "
           "discovered a potent Debugging potion, but it's too much for me to handle,' they say, offering it to you.")
     items[0]['Healing Items'][0]['Amount'] += 1
-    print("'Use this in your forthcoming battle. The Fragmented Sentinel, guardian of the forge, will not fall easily.'")
+    print("'Use this in your forthcoming battle. The Pyroforge Incendrath, guardian of the forge, will not fall easily.'")
     wait_for_input()
 
-    # Approaching the Boss Battle
-    print("\nThe heart of the forge pulses with a powerful energy, where the Fragmented Sentinel awaits, a behemoth "
-          "pieced together from countless lines of code and magical essence.")
-    wait_for_input()
-    print("'Foolhardy debugger,' it bellows. 'Your efforts to cleanse this place of its necessary chaos are futile. "
-          "Prepare to be deleted.'")
+    print("\nWithin the roaring flames of the Enchanted Forge of Debugging, Pyroforge Incendrath emerges as the fiery "
+          "guardian of the realm. Born from the molten depths of digital infernos, this entity embodies the "
+          "relentless fury of the forge itself. Its attacks blaze with incendiary power, engulfing adversaries in "
+          "waves of scorching heat and relentless combustion. Pyroforge Incendrath's presence serves as both a trial "
+          "by fire and a testament to the forge's unrivaled potency, challenging brave souls who dare to tread its "
+          "fiery halls.")
     boss_enemy_battle(player)
 
     # Boss Battle
@@ -581,4 +588,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
