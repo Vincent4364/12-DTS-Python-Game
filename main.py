@@ -463,7 +463,7 @@ def Archives_of_Legacy_Code(player):
 
     print("\nAs you navigate through towering stacks of parchments and scrolls, the air crackles with static energy. "
           "Suddenly, an avatar of the Archive's guardian materializes before you. 'Welcome, seeker of truths,' it "
-          "intonates. 'Here lies the foundation of all that Pythoria was, is, and will be. But be warned, some "
+          "intones. 'Here lies the foundation of all that Pythoria was, is, and will be. But be warned, some "
           "truths might just rewrite you.'")
     wait_for_input()
 
